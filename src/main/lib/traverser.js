@@ -27,7 +27,7 @@ const build = (doConfirmValidCharacter, maxWords) => {
 class Traverser {
   constructor(doGetTargetCharacterType, maxWords) {
     this.JA_MAX_LENGTH = 40;
-    this.getTargetCharacterType = doGetTargetCharacterType ?? ((code) => (isEnglishLikeCharacter(code) ? 3 : 0));
+    this.getTargetCharacterType = doGetTargetCharacterType ?? ((code) => (isLatin1Character(code) ? 3 : 0));
     this.maxWords = maxWords ?? 8;
     this.decoy = decoy.create("div");
   }
@@ -51,18 +51,18 @@ class Traverser {
   }
 
   fetchTextFromTextNode(textNode, offset) {
-    const { text, subText, end, isEnglish } = this.getTextFromRange(textNode.data, offset);
+    const { text, subText, end, isLatin1: isLatin1 } = this.getTextFromRange(textNode.data, offset);
     const textList = subText ? [text, subText] : [text];
     if (!end) {
       return textList;
     }
     const followingText = dom.traverse(textNode);
-    return textList.map((t) => this.concatenate(t, followingText, isEnglish));
+    return textList.map((t) => this.concatenate(t, followingText, isLatin1));
   }
 
-  concatenate(text, followingText, isEnglish) {
-    const concatenatedText = concatenateFollowingText(text, followingText, isEnglish);
-    const endIndex = isEnglish
+  concatenate(text, followingText, isLatin1) {
+    const concatenatedText = concatenateFollowingText(text, followingText, isLatin1);
+    const endIndex = isLatin1
       ? searchEndIndex(concatenatedText, 0, this.maxWords, this.getTargetCharacterType)
       : this.JA_MAX_LENGTH;
     return concatenatedText.substring(0, endIndex);
@@ -91,14 +91,14 @@ class Traverser {
       return {};
     }
     const code = sourceText.charCodeAt(offset);
-    const isEnglish = isEnglishLikeCharacter(code);
+    const isLatin1 = isLatin1Character(code);
 
-    if (isEnglish) {
+    if (isLatin1) {
       const startIndex = searchStartIndex(sourceText, offset, this.getTargetCharacterType);
       const endIndex = searchEndIndex(sourceText, offset, this.maxWords, this.getTargetCharacterType);
       const text = sourceText.substring(startIndex, endIndex);
       const end = endIndex >= sourceText.length;
-      return { text, undefined, end, isEnglish };
+      return { text, undefined, end, isLatin1: isLatin1 };
     }
 
     const startIndex = offset;
@@ -108,7 +108,7 @@ class Traverser {
 
     const subText = startIndex !== properStartIndex ? sourceText.substring(startIndex, endIndex) : undefined;
     const end = endIndex >= sourceText.length;
-    return { text, subText, end, isEnglish };
+    return { text, subText, end, isLatin1: isLatin1 };
   }
 }
 
@@ -181,11 +181,11 @@ const searchEndIndex = (text, index, maxWords, doGetCharacterType) => {
   return endIndex;
 };
 
-const concatenateFollowingText = (text, followingText, isEnglish) => {
+const concatenateFollowingText = (text, followingText, isLatin1) => {
   if (!followingText) {
     return text;
   }
-  if (!isEnglish) {
+  if (!isLatin1) {
     return text + followingText;
   }
   if (followingText.startsWith("-")) {
@@ -194,7 +194,7 @@ const concatenateFollowingText = (text, followingText, isEnglish) => {
   return text + " " + followingText;
 };
 
-const isEnglishLikeCharacter = (code) => 0x20 <= code && code <= 0x7e;
+const isLatin1Character = (code) => (0x20 <= code && code <= 0x7e) || (0xa0 <= code && code <= 0xff);
 
 // Intl.v8BreakIterator will be replaced with Intl.Segmenter in the future.
 // https://github.com/tc39/proposal-intl-segmenter
