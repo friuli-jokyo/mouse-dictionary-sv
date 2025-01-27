@@ -191,6 +191,54 @@ text.linkWords = (words, minWordNum = 1, enablePhrasing = true) => {
   return result1;
 };
 
+/**
+ * Extracts patterns from the input string based on specific markers.
+ *
+ * 1: <→...> : Any characters between "<→" and ">".
+ * 2: ＝... Alphabet characters and spaces after "＝".
+ */
+text.extractRefPatternsInText = (input) => {
+  const results = [];
+
+  let i = 0;
+
+  while (i < input.length) {
+    if (input[i] === "<" && input[i + 1] === "→") {
+      const start = i + 2;
+      const end = input.indexOf(">", start);
+      if (end !== -1) {
+        const w = input.slice(start, end).trim();
+        results.push(w);
+        i = end + 1;
+        continue;
+      }
+    }
+
+    if (input[i] === "＝") {
+      const start = i + 1;
+      let end = start;
+      for (; end < input.length; end++) {
+        const ch = input[end];
+        if (ch >= "A" && ch <= "Z") continue;
+        if (ch >= "a" && ch <= "z") continue;
+        if (ch >= "0" && ch <= "9") continue;
+        if (ch === " ") continue;
+        break;
+      }
+      const w = input.slice(start, end).trim();
+      if (w) {
+        results.push(w);
+      }
+      i = end;
+      continue;
+    }
+
+    i++;
+  }
+
+  return results;
+};
+
 const makeLinkedWords = (wordList, minWordNum, enablePhrasing = true) => {
   const linkedWords = [];
   const phraseProcessedWords = [];
