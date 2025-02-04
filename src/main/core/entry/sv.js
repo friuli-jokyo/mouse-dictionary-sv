@@ -259,7 +259,7 @@ const TRAILING_RULES = [
   [
     { search: "'s", new: "" },
     { search: "s", new: "" },
-  ]
+  ],
 ];
 
 /**

@@ -51,7 +51,7 @@ class Traverser {
   }
 
   fetchTextFromTextNode(textNode, offset) {
-    const { text, subText, end, isLatin1: isLatin1 } = this.getTextFromRange(textNode.data, offset);
+    const { text, subText, end, isLatin1 } = this.getTextFromRange(textNode.data, offset);
     const textList = subText ? [text, subText] : [text];
     if (!end) {
       return textList;
